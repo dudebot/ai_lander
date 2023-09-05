@@ -12,7 +12,7 @@ FPS = 60
 
 # Physics constants
 GRAVITY = 0.03
-SPEED_THRESHOLD = 0.9  # Speed threshold for a successful landing (adjust as needed)
+SPEED_THRESHOLD = 2  # Speed threshold for a successful landing (adjust as needed)
 ANGLE_THRESHOLD = 10  # Absolute angle threshold for a successful landing (adjust as needed)
 
 # Colors
@@ -35,6 +35,8 @@ rocket_angle = 0
 rocket_velocity_x = 0
 rocket_velocity_y = 0
 angular_velocity = 0
+fuel = 100
+fuel_rate = 0.5
 
 # Define the rocket shape and size
 ROCKET_WIDTH = 20
@@ -61,11 +63,12 @@ while running:
         rocket_angle += 1
     if keys[pygame.K_RIGHT]:
         rocket_angle -= 1
-    if keys[pygame.K_UP]:
+    if keys[pygame.K_UP] and fuel > 0:
         # Calculate the change in velocity based on rocket angle
         angle_rad = math.radians(rocket_angle)
         rocket_velocity_y += -0.1 * math.cos(angle_rad)
         rocket_velocity_x += -0.1 * math.sin(angle_rad)
+        fuel -= fuel_rate
 
     if landing_status is None:
         # Apply gravity
@@ -78,13 +81,12 @@ while running:
 
         # Check for collision with the ground
         if rocket_y + ROCKET_SIZE >= HEIGHT - GROUND_HEIGHT:
-            if abs(rocket_velocity_y) < SPEED_THRESHOLD and abs(rocket_angle) < ANGLE_THRESHOLD:
-                landing_status = "landed"
+            if math.sqrt(rocket_velocity_y*rocket_velocity_y+rocket_velocity_x*rocket_velocity_x) > SPEED_THRESHOLD:
+                landing_status = "crashed (speed)"
+            elif abs(rocket_angle) > ANGLE_THRESHOLD:
+                landing_status = "crashed (angle)"
             else:
-                if abs(rocket_velocity_y) > SPEED_THRESHOLD:
-                    landing_status = "crashed (speed)"
-                else:
-                    landing_status = "crashed (angle)"
+                landing_status = "landed!"
 
         # Clear the screen
         screen.fill(WHITE)
@@ -102,7 +104,7 @@ while running:
         screen.blit(rotated_rocket, rotated_rect)
 
         # draw the speed and angle on the top right corner
-        text = font.render("Speed: " + str(round(rocket_velocity_y, 2)) + " Angle: " + str(round(rocket_angle, 2)), True, BLACK)
+        text = font.render(f"Speed: {round(math.sqrt(rocket_velocity_y*rocket_velocity_y+rocket_velocity_x*rocket_velocity_x), 2)} Angle: {round(rocket_angle, 2)} Fuel: {round(fuel)}", True, BLACK)
         text_rect = text.get_rect(center=(WIDTH - 200, 50))
         screen.blit(text, text_rect)
 
@@ -121,6 +123,7 @@ while running:
             rocket_velocity_y = 0
             angular_velocity = 0
             rocket_angle = 0
+            fuel = 100
 
     pygame.display.flip()
     clock.tick(FPS)
