@@ -1,6 +1,18 @@
 import pygame
 import math
-
+'''
+todo:
+add left/right location 
+	variables
+	draw
+	win condition
+add fuel
+	variable
+	draw
+	thrust if statement
+recording per-frame telemetry
+choose model to solve problem
+'''
 # Initialize pygame
 pygame.init()
 
