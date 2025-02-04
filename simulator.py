@@ -41,8 +41,8 @@ pygame.display.set_caption("Rocket Landing Simulator")
 font = pygame.font.Font(None, 36)
 
 # Rocket attributes
-rocket_x = WIDTH // 2
-rocket_y = 50
+rocket_x = 0  # Start from the top left corner
+rocket_y = 0  # Start from the top left corner
 rocket_angle = 0
 rocket_velocity_x = 0
 rocket_velocity_y = 0
@@ -61,6 +61,9 @@ LEG_WIDTH = 41
 # Landing status
 landing_status = None  # None: in progress, "landed": successfully landed, "crashed": crashed
 
+# Debug information toggle
+debug_info = False
+
 # Main game loop
 running = True
 clock = pygame.time.Clock()
@@ -69,6 +72,18 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKQUOTE:
+                debug_info = not debug_info
+            if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                landing_status = None
+                rocket_x = 0  # Reset to the top left corner
+                rocket_y = 0  # Reset to the top left corner
+                rocket_velocity_x = 0
+                rocket_velocity_y = 0
+                angular_velocity = 0
+                rocket_angle = 0
+                fuel = 100
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -115,10 +130,11 @@ while running:
         rotated_rect = rotated_rocket.get_rect(center=(rocket_x, rocket_y))
         screen.blit(rotated_rocket, rotated_rect)
 
-        # draw the speed and angle on the top right corner
-        text = font.render(f"Speed: {round(math.sqrt(rocket_velocity_y*rocket_velocity_y+rocket_velocity_x*rocket_velocity_x), 2)} Angle: {round(rocket_angle, 2)} Fuel: {round(fuel)}", True, BLACK)
-        text_rect = text.get_rect(center=(WIDTH - 200, 50))
-        screen.blit(text, text_rect)
+        # Draw debug information if toggled on
+        if debug_info:
+            text = font.render(f"Speed: {round(math.sqrt(rocket_velocity_y*rocket_velocity_y+rocket_velocity_x*rocket_velocity_x), 2)} Angle: {round(rocket_angle, 2)} X: {round(rocket_x, 2)} Y: {round(rocket_y, 2)}", True, BLACK)
+            text_rect = text.get_rect(center=(WIDTH - 200, 50))
+            screen.blit(text, text_rect)
 
     # Display landing status
     else:
@@ -126,16 +142,6 @@ while running:
         text = font.render(landing_status.capitalize() + "!", True, BLACK)
         text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         screen.blit(text, text_rect)
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE]:
-            landing_status = None
-            rocket_x = WIDTH // 2
-            rocket_y = 50
-            rocket_velocity_x = 0
-            rocket_velocity_y = 0
-            angular_velocity = 0
-            rocket_angle = 0
-            fuel = 100
 
     pygame.display.flip()
     clock.tick(FPS)
